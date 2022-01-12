@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteBase /
+
+RewriteRule ^/?([a-zA-Z0-9\\-]*)/?$ /index.php?go=$1 [L,QSA]
