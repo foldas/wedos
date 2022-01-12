@@ -1,6 +1,12 @@
-## Tool for listing domains from wedos.cz and possibility to renew from credit on one click.
+## Webová aplikace pro správu domén z wedos.cz
 
-### Usage
+### Funkce
 
-Rename config.sample.php to config.php and fill in your login data.
-Variable 'pass' must be hashed with password_hash function.
+- seznam domén včetně dat expirací
+- prodloužení domény na jeden klik z kreditu
+- stav kreditu
+
+### Použití
+
+- přejmenujte config.sample.php na config.php a vyplňte údaje (přihlašovací údaje k aplikaci + k API)
+- proměnná 'pass' musí být hashována přes password_hash funkci
