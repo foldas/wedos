@@ -2,7 +2,9 @@
 session_start();
 require_once __DIR__.'/config.php';
 if (empty($_SESSION['login'])) {
-	if (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
+	if (empty($_CONFIG['name']) && empty($_CONFIG['pass'])) {
+		$_SESSION['login']=1;
+	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
 		if ($_POST['jmeno']==$_CONFIG['name'] && password_verify($_POST['heslo'],$_CONFIG['pass'])) {
 			$_SESSION['login']=1;
 		}
@@ -45,9 +47,10 @@ $auth = sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H', time()));
 $cltrid = time();
 $url = 'https://api.wedos.com/wapi/json';
 ?>
-<br/><a href="/ping/" class="button button-primary">ping</a>
-<br/><a href="/credit/" class="button button-primary">kredit</a>
 <br/><a href="/domains/" class="button button-primary">domény</a>
+<br/><a href="/credit/" class="button button-primary">kredit</a>
+<br/><a href="/movement/" class="button button-primary">pohyby</a>
+<br/><a href="/ping/" class="button button-primary">ping</a>
 </div>
 <div class="two-thirds column">
 <?php
@@ -73,6 +76,20 @@ switch ($go) {
 				'auth'=>$auth,
 				'command'=>'credit-info',
 				'clTRID'=>$go.' - '.$cltrid
+			]
+		];
+	break;
+	case "movement":
+		$input=[
+			'request'=>[
+				'user'=>$_CONFIG['apiname'],
+				'auth'=>$auth,
+				'command'=>'account-list',
+				'clTRID'=>$go.' - '.$cltrid,
+				'data'=>[
+					'date_from'=>date("Y-m-d",strtotime("-3 month")),
+					'date_to'=>date("Y-m-d")
+				]
 			]
 		];
 	break;
@@ -103,7 +120,6 @@ switch ($go) {
 }
 if (!empty($input)) {
 	$json=json_encode($input);
-	//echo "{$json}<br/>";
 	$ch=curl_init($url);
 	curl_setopt($ch,CURLOPT_TIMEOUT,60);
 	curl_setopt($ch,CURLOPT_POST,true);
@@ -131,6 +147,35 @@ if (!empty($input)) {
 				echo "{$klic}: {$hodnota}<br/>";
 			}
 		break;
+		case "movement":
+			echo "<br/>";
+			foreach($data['response'] as $klic => $hodnota) {
+				if (is_array($hodnota)) {
+					if ($klic=="data") echo "<br/>";
+					echo "<b>{$klic}:</b><br/>";
+					$i=0;
+					$pole=[];
+					foreach($hodnota as $klic2 => $hodnota2) {
+						$pole[$i]="";
+						if (is_array($hodnota2)) {
+							foreach($hodnota2 as $klic3 => $hodnota3) {
+								if ($klic3=="ID") $pole[$i].="<br/>";
+								$pole[$i].="{$klic3}: {$hodnota3}<br/>";
+							}
+						} else {
+							$pole[$i].="{$klic2}: {$hodnota2}<br/>";
+						}
+						$i++;
+					}
+					krsort($pole);
+					foreach ($pole as $item) {
+						echo $item;
+					}
+				} else {
+					echo "{$klic}: {$hodnota}<br/>";
+				}
+			}
+		break;
 		case "domains":
 			$pole_domen=[];
 			foreach($data['response'] as $klic => $hodnota) {
@@ -154,7 +199,7 @@ if (!empty($input)) {
 				array_multisort($expiration, SORT_ASC, $pole_domen);
 				foreach ($pole_domen as $klic => $hodnota) {
 					if ($hodnota['status']!="deleted") {
-						echo "<tr><td><a href=\"https://{$hodnota['name']}\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit?'));\">Prodloužit</a></td></tr>";
+						echo "<tr><td><a href=\"https://{$hodnota['name']}\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
 					}
 				}
 			}
@@ -181,6 +226,7 @@ if (!empty($input)) {
 			}
 		break;
 	}
+	echo "<br/>";
 }
 ?>
 </div>
