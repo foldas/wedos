@@ -14,13 +14,13 @@ if (empty($_SESSION['login'])) {
 <!doctype html>
 <html lang="cs">
 <head>
-<meta charset="utf-8" />
-<meta name="robots" content="noindex, nofollow" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="stylesheet" href="/css/normalize.css" type="text/css" />
-<link rel="stylesheet" href="/css/skeleton.css" type="text/css" />
-<link rel="stylesheet" href="/css/custom.css" type="text/css" />
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+	<meta charset="utf-8" />
+	<meta name="robots" content="noindex, nofollow" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="/css/normalize.css" type="text/css" />
+	<link rel="stylesheet" href="/css/skeleton.css" type="text/css" />
+	<link rel="stylesheet" href="/css/custom.css" type="text/css" />
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
 <?php
@@ -40,20 +40,17 @@ if (empty($_SESSION['login'])) {
 ?>
 <br/>
 <div class="container">
-<div class="row">
-<div class="one-third column">
+	<div class="row">
+		<div class="one-third column">
+			<br/><a href="/domains/" class="button button-primary">domény</a>
+			<br/><a href="/credit/" class="button button-primary">kredit</a>
+			<br/><a href="/movement/" class="button button-primary">pohyby</a>
+			<br/><a href="/ping/" class="button button-primary">ping</a>
+		</div>
+		<div class="two-thirds column">
 <?php
-$auth = sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H', time()));
-$cltrid = time();
-$url = 'https://api.wedos.com/wapi/json';
-?>
-<br/><a href="/domains/" class="button button-primary">domény</a>
-<br/><a href="/credit/" class="button button-primary">kredit</a>
-<br/><a href="/movement/" class="button button-primary">pohyby</a>
-<br/><a href="/ping/" class="button button-primary">ping</a>
-</div>
-<div class="two-thirds column">
-<?php
+$time=time();
+$auth=sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H',$time));
 if (!empty($_GET['go'])) $go=$_GET['go']; else $go="";
 switch ($go) {
 	default:
@@ -65,7 +62,7 @@ switch ($go) {
 				'user'=>$_CONFIG['apiname'],
 				'auth'=>$auth,
 				'command'=>'ping',
-				'clTRID'=>$go.' - '.$cltrid
+				'clTRID'=>$go.' - '.$time
 			]
 		];
 	break;
@@ -75,7 +72,7 @@ switch ($go) {
 				'user'=>$_CONFIG['apiname'],
 				'auth'=>$auth,
 				'command'=>'credit-info',
-				'clTRID'=>$go.' - '.$cltrid
+				'clTRID'=>$go.' - '.$time
 			]
 		];
 	break;
@@ -85,7 +82,7 @@ switch ($go) {
 				'user'=>$_CONFIG['apiname'],
 				'auth'=>$auth,
 				'command'=>'account-list',
-				'clTRID'=>$go.' - '.$cltrid,
+				'clTRID'=>$go.' - '.$time,
 				'data'=>[
 					'date_from'=>date("Y-m-d",strtotime("-3 month")),
 					'date_to'=>date("Y-m-d")
@@ -99,7 +96,7 @@ switch ($go) {
 				'user'=>$_CONFIG['apiname'],
 				'auth'=>$auth,
 				'command'=>'domains-list',
-				'clTRID'=>$go.' - '.$cltrid
+				'clTRID'=>$go.' - '.$time
 			]
 		];
 	break;
@@ -109,7 +106,7 @@ switch ($go) {
 				'user'=>$_CONFIG['apiname'],
 				'auth'=>$auth,
 				'command'=>'domain-renew',
-				'clTRID'=>$go.' - '.$cltrid,
+				'clTRID'=>$go.' - '.$time,
 				'data'=>[
 					'name'=>$_GET['name'],
 					'period'=>1
@@ -120,7 +117,7 @@ switch ($go) {
 }
 if (!empty($input)) {
 	$json=json_encode($input);
-	$ch=curl_init($url);
+	$ch=curl_init('https://api.wedos.com/wapi/json');
 	curl_setopt($ch,CURLOPT_TIMEOUT,60);
 	curl_setopt($ch,CURLOPT_POST,true);
 	curl_setopt($ch,CURLOPT_POSTFIELDS,'request='.$json);
@@ -229,12 +226,11 @@ if (!empty($input)) {
 	echo "<br/>";
 }
 ?>
-</div>
-</div>
+		</div>
+	</div>
 </div>
 <?php
 }
 ?>
-</div>
 </body>
 </html>
