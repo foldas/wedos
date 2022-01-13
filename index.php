@@ -192,7 +192,7 @@ if (!empty($input)) {
 				}
 			}
 			echo "<table class=\"u-full-width\">";
-			echo "<thead><tr><th>doména</th><th>stav</th><th class=\"text-center\">expriace</th><th class=\"text-center\">akce</th></tr></thead>";
+			echo "<thead><tr><th>doména</th><th>stav</th><th class=\"text-center\">expirace</th><th class=\"text-center\">akce</th></tr></thead>";
 			echo "<tbody>";
 			if (count($pole_domen)>0) {
 				$expiration=array_column($pole_domen, 'expiration');
