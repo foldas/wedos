@@ -2,13 +2,15 @@
 session_start();
 require_once __DIR__.'/config.php';
 if (empty($_SESSION['login'])) {
-	if (empty($_CONFIG['name']) && empty($_CONFIG['pass'])) {
+	if (empty($_CONFIG['name']) || empty($_CONFIG['pass'])) {
 		$_SESSION['login']=1;
 	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
 		if ($_POST['jmeno']==$_CONFIG['name'] && password_verify($_POST['heslo'],$_CONFIG['pass'])) {
 			$_SESSION['login']=1;
 		}
 	}
+} elseif (!empty($_GET['logout']) && !empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
+	unset($_SESSION['login']);
 }
 ?>
 <!doctype html>
@@ -17,37 +19,43 @@ if (empty($_SESSION['login'])) {
 	<meta charset="utf-8" />
 	<meta name="robots" content="noindex, nofollow" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" href="/css/normalize.css" type="text/css" />
-	<link rel="stylesheet" href="/css/skeleton.css" type="text/css" />
-	<link rel="stylesheet" href="/css/custom.css" type="text/css" />
+	<link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css" />
 	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
+<main class="container">
 <?php
 if (empty($_SESSION['login'])) {
 ?>
-<div class="section">
-	<div class="container">
-		<form action="/" method="post">
-			<input type="text" name="jmeno" placeholder="jméno" required />
-			<br/><input type="password" name="heslo" placeholder="heslo" required />
-			<br/><button class="button button-primary">PŘIHLÁSIT SE</button>
-		</form>
+<form action="/" method="post">
+	<div class="position-absolute top-50 start-50 translate-middle">
+		<div class="d-flex flex-wrap">
+			<div class="my-1 w-100"><input type="text" id="jmeno" name="jmeno" placeholder="Jméno" class="form-control" required /></div>
+			<div class="my-1 w-100"><input type="password" id="heslo" name="heslo" placeholder="Heslo" class="form-control" required /></div>
+			<div class="my-1 w-100 text-center"><button class="btn btn-primary">Přihlásit se</button></div>
+		</div>
 	</div>
-</div>
+</form>
 <?php
 } else {
 ?>
-<br/>
-<div class="container">
-	<div class="row">
-		<div class="one-third column">
-			<br/><a href="/domains/" class="button button-primary">domény</a>
-			<br/><a href="/credit/" class="button button-primary">kredit</a>
-			<br/><a href="/movement/" class="button button-primary">pohyby</a>
-			<br/><a href="/ping/" class="button button-primary">ping</a>
+<div class="row mt-2 mt-md-4">
+	<div class="col-md-3 col-lg-2 mb-2 pe-lg-4">
+		<div class="d-flex flex-wrap flex-md-column">
+			<div class="p-1 px-md-0 flex-fill"><a href="/domains/" class="btn btn-primary w-100 text-md-start">Domény</a></div>
+			<div class="p-1 px-md-0 flex-fill"><a href="/credit/" class="btn btn-primary w-100 text-md-start">Kredit</a></div>
+			<div class="p-1 px-md-0 flex-fill"><a href="/movement/" class="btn btn-primary w-100 text-md-start">Pohyby</a></div>
+			<div class="p-1 px-md-0 flex-fill"><a href="/ping/" class="btn btn-primary w-100 text-md-start">Ping</a></div>
+<?php
+if (!empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
+?>
+			<div class="p-1 px-md-0 flex-fill"><a href="/?logout=yes" class="btn btn-secondary w-100 text-md-start">Odhlásit</a></div>
+<?php
+}
+?>
 		</div>
-		<div class="two-thirds column">
+	</div>
+	<div class="col-md-9 col-lg-10">
 <?php
 $time=time();
 $auth=sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H',$time));
@@ -127,13 +135,11 @@ if (!empty($input)) {
 	$data=json_decode($res,true);
 	switch ($go) {
 		case "ping":
-			echo "<br/>";
 			foreach($data['response'] as $klic => $hodnota) {
 				echo "{$klic}: {$hodnota}<br/>";
 			}
 		break;
 		case "credit":
-			echo "<br/>";
 			$pole=[];
 			foreach($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
@@ -145,7 +151,6 @@ if (!empty($input)) {
 			}
 		break;
 		case "movement":
-			echo "<br/>";
 			foreach($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					if ($klic=="data") echo "<br/>";
@@ -188,15 +193,20 @@ if (!empty($input)) {
 					}
 				}
 			}
-			echo "<table class=\"u-full-width\">";
-			echo "<thead><tr><th>doména</th><th>stav</th><th class=\"text-center\">expirace</th><th class=\"text-center\">akce</th></tr></thead>";
+			echo "<table class=\"table\">";
+			echo "<thead><tr><th><a href=\"/domains/?sortName=1\" class=\"link-dark\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"link-dark\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody>";
 			if (count($pole_domen)>0) {
-				$expiration=array_column($pole_domen, 'expiration');
-				array_multisort($expiration, SORT_ASC, $pole_domen);
+				if (!empty($_GET['sortName'])) {
+					$name=array_column($pole_domen, 'name');
+					array_multisort($name, SORT_ASC, $pole_domen);
+				} else {
+					$expiration=array_column($pole_domen, 'expiration');
+					array_multisort($expiration, SORT_ASC, $pole_domen);
+				}
 				foreach ($pole_domen as $klic => $hodnota) {
 					if ($hodnota['status']!="deleted") {
-						echo "<tr><td><a href=\"https://{$hodnota['name']}\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
+						echo "<tr><td><a href=\"https://{$hodnota['name']}\" class=\"link-dark\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
 					}
 				}
 			}
@@ -204,7 +214,6 @@ if (!empty($input)) {
 			echo "</table>";
 		break;
 		case "renew":
-			echo "<br/>";
 			foreach($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					echo "<b>{$klic}:</b><br/>";
@@ -223,14 +232,16 @@ if (!empty($input)) {
 			}
 		break;
 	}
-	echo "<br/>";
+	echo "<br/>\n";
+} else {
+	echo "<div class=\"m-2 text-center text-md-start\"><a href=\"https://github.com/foldas/wedos\" target=\"_blank\">https://github.com/foldas/wedos</a></div>";
 }
 ?>
-		</div>
 	</div>
 </div>
 <?php
 }
 ?>
+</main>
 </body>
 </html>
