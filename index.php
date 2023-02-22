@@ -194,9 +194,12 @@ if (!empty($input)) {
 				}
 			}
 			echo "<table class=\"table\">";
-			echo "<thead><tr><th><a href=\"/domains/?sortName=1\" class=\"link-dark\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"link-dark\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
-			echo "<tbody>";
+			echo "<thead><tr><th class=\"text-center\">#<th><a href=\"/domains/?sortName=1\" class=\"link-dark\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"link-dark\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
+			echo "<tbody class=\"table-group-divider\">";
 			if (count($pole_domen)>0) {
+				$today=date("Y-m-d");
+				$fourteen=date("Y-m-d",strtotime("+14 days"));
+				$no=1;
 				if (!empty($_GET['sortName'])) {
 					$name=array_column($pole_domen, 'name');
 					array_multisort($name, SORT_ASC, $pole_domen);
@@ -206,7 +209,16 @@ if (!empty($input)) {
 				}
 				foreach ($pole_domen as $klic => $hodnota) {
 					if ($hodnota['status']!="deleted") {
-						echo "<tr><td><a href=\"https://{$hodnota['name']}\" class=\"link-dark\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
+						echo "<tr><td class=\"text-center\">";
+						if ($hodnota['expiration']<=$today) {
+							echo "<span class=\"badge text-bg-danger\">{$no}</span>";
+						} elseif ($hodnota['expiration']<=$fourteen) {
+							echo "<span class=\"badge text-bg-warning\">{$no}</span>";
+						} else {
+							echo "<span class=\"badge text-bg-success\">{$no}</span>";
+						}
+						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"link-dark\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
+						$no++;
 					}
 				}
 			}
