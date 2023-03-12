@@ -1,4 +1,5 @@
 RewriteEngine On
 RewriteBase /
 
+RewriteRule ^/?cron/([a-zA-Z0-9\\-]*)/?$ /cron.php?go=$1 [L,QSA]
 RewriteRule ^/?([a-zA-Z0-9\\-]*)/?$ /index.php?go=$1 [L,QSA]

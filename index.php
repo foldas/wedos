@@ -196,7 +196,7 @@ if (!empty($input)) {
 			echo "<table class=\"table\">";
 			echo "<thead><tr><th class=\"text-center\">#<th><a href=\"/domains/?sortName=1\" class=\"link-dark\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"link-dark\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
-			if (count($pole_domen)>0) {
+			if ($pole_domen) {
 				$today=date("Y-m-d");
 				$fourteen=date("Y-m-d",strtotime("+14 days"));
 				$no=1;
