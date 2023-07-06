@@ -13,17 +13,50 @@ if (empty($_SESSION['login'])) {
 	unset($_SESSION['login']);
 }
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
 	<meta charset="utf-8" />
 	<meta name="robots" content="noindex, nofollow" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css" />
+	<link rel="stylesheet" href="/assets/css/bootstrap.min.css" type="text/css" />
+	<link href="/assets/css/custom.min.css" rel="stylesheet">
 	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
 <main class="container">
+<div class="d-flex">
+	<ul class="navbar-nav ms-auto mt-3 me-1">
+		<li class="nav-item dropdown">
+			<button class="btn btn-link nav-link py-1 px-2 dropdown-toggle d-flex align-items-center border" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown">
+				<svg class="bi my-1 theme-icon-active"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme" style="--bs-dropdown-min-width: 8rem;">
+				<li>
+					<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
+						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#sun-fill"></use></svg>
+						Světlý
+						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
+					</button>
+				</li>
+				<li>
+					<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
+						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#moon-stars-fill"></use></svg>
+						Tmavý
+						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
+					</button>
+				</li>
+				<li>
+					<button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto">
+						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
+						Auto
+						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
+					</button>
+				</li>
+			</ul>
+		</li>
+	</ul>
+</div>
 <?php
 if (empty($_SESSION['login'])) {
 ?>
@@ -194,7 +227,7 @@ if (!empty($input)) {
 				}
 			}
 			echo "<table class=\"table\">";
-			echo "<thead><tr><th class=\"text-center\">#<th><a href=\"/domains/?sortName=1\" class=\"link-dark\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"link-dark\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
+			echo "<thead><tr><th class=\"text-center\">#<th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
 			if ($pole_domen) {
 				$today=date("Y-m-d");
@@ -217,7 +250,7 @@ if (!empty($input)) {
 						} else {
 							echo "<span class=\"badge text-bg-success\">{$no}</span>";
 						}
-						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"link-dark\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
+						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
 						$no++;
 					}
 				}
@@ -255,5 +288,7 @@ if (!empty($input)) {
 }
 ?>
 </main>
+<script src="/assets/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/switch.min.js"></script>
 </body>
 </html>
