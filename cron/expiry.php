@@ -35,26 +35,26 @@ if ($_CONFIG && !empty($_CONFIG['email']) && !empty($_CONFIG['from']) && filter_
 		}
 	}
 	if ($pole_domen) {
-		$message="<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"><style>*{background:white;color:black;font-family:verdana;font-size:12px;}table{padding:10px;border:1px solid grey;}th,td{padding:5px;}a{color:navy;}</style></head><body>";
-		$message.="<table><thead><tr><th>Doména</th><th>Stav</th><th>Expirace</th></tr><thead><tbody>";
+		$zprava="";
 		$expiration=array_column($pole_domen, 'expiration');
 		array_multisort($expiration, SORT_ASC, $pole_domen);
 		foreach ($pole_domen as $klic => $hodnota) {
 			if ($hodnota['status']!="deleted" && $hodnota['expiration']<=$fourteen) {
-				$message.="<tr><td><a href=\"https://{$hodnota['name']}\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td></tr>";
+				$zprava.="<tr><td><a href=\"https://{$hodnota['name']}\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td></tr>";
 			}
 		}
-		$message.="</tbody></table>";
-		$message.="</body></html>";
-		if (!empty($message)) {
+		if (!empty($zprava)) {
+			$message="<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"><style>*{background:white;color:black;font-family:verdana;font-size:12px;}table{padding:10px;border:1px solid grey;}th,td{padding:5px;}a{color:navy;}</style></head><body>";
+			$message.="<table><thead><tr><th>Doména</th><th>Stav</th><th>Expirace</th></tr><thead><tbody>";
+			$message.=$zprava;
+			$message.="</tbody></table>";
+			$message.="</body></html>";
 			$headers=[
 				'MIME-Version: 1.0',
 				'Content-type: text/html; charset=utf-8',
 				'From: '.$_CONFIG['from']
 			];
-			$r=mail($_CONFIG['email'],"Wedos domény",$message,implode("\r\n",$headers));
-			var_dump($r);
-			var_dump($headers);
+			mail($_CONFIG['email'],"Wedos domény",$message,implode("\r\n",$headers));
 		}
 	}
 }
