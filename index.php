@@ -227,7 +227,7 @@ if (!empty($input)) {
 				}
 			}
 			echo "<table class=\"table\">";
-			echo "<thead><tr><th class=\"text-center\">#<th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
+			echo "<thead><tr><th class=\"text-center\">#</th><th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
 			if ($pole_domen) {
 				$today=date("Y-m-d");
@@ -250,7 +250,13 @@ if (!empty($input)) {
 						} else {
 							echo "<span class=\"badge text-bg-success\">{$no}</span>";
 						}
-						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\"><a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a></td></tr>";
+						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
+						if (!in_array($hodnota['name'],$_CONFIG['blocked'])) {
+							echo "<a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a>";
+						} else {
+							echo "<span class=\"badge text-bg-primary\">X</span>";
+						}
+						echo "</td></tr>";
 						$no++;
 					}
 				}
