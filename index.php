@@ -21,6 +21,7 @@ if (empty($_SESSION['login'])) {
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="stylesheet" href="/assets/css/bootstrap.min.css" type="text/css" />
 	<link href="/assets/css/custom.min.css" rel="stylesheet">
+	<link href="/assets/css/variables.css" rel="stylesheet">
 	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
@@ -213,6 +214,16 @@ if (!empty($input)) {
 		break;
 		case "domains":
 			$pole_domen=[];
+			if ($_CONFIG['external']) {
+				foreach($_CONFIG['external'] as $item) {
+					$pole_domen[]=[
+						'status'=>'local',
+						'name'=>$item['name'],
+						'expiration'=>$item['expiration'],
+						'note'=>$item['note'],
+					];
+				}
+			}
 			foreach($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					foreach($hodnota as $klic2 => $hodnota2) {
@@ -250,11 +261,17 @@ if (!empty($input)) {
 						} else {
 							echo "<span class=\"badge text-bg-success\">{$no}</span>";
 						}
-						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>{$hodnota['status']}</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
-						if (!in_array($hodnota['name'],$_CONFIG['blocked'])) {
-							echo "<a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a>";
+						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>";
+						if ($hodnota['status']=="local") echo "<span class=\"badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle\">{$hodnota['status']}</span>"; else echo $hodnota['status'];
+						echo "</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
+						if ($hodnota['status']=="local") {
+							echo "<i>{$hodnota['note']}</i>";
 						} else {
-							echo "<span class=\"badge text-bg-primary\">X</span>";
+							if (!in_array($hodnota['name'],$_CONFIG['blocked'])) {
+								echo "<a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a>";
+							} else {
+								echo "<span class=\"badge text-bg-primary\">X</span>";
+							}
 						}
 						echo "</td></tr>";
 						$no++;

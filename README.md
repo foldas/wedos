@@ -4,11 +4,15 @@
 
 ### Funkce
 
-- seznam domén včetně dat expirací
+- seznam domén včetně dat expirací (načtení přes wedos API)
 - prodloužení domény na jeden klik z kreditu
 - stav kreditu
 - pohyby kreditu za poslední 3 měsíce
 - ping
+
+### Další funkce
+
+- zobrazení dalších domén s daty expirace
 
 ### Použití
 
@@ -21,3 +25,11 @@
 - podle potřeby můžete spouštět přes cron úlohu, která pošle na e-mail blížící se expirace domén (14 dnů)
 - spouštějte 1x týdně (případně 1x za den) přes /cron/expiry/ nebo /cron.php?go=expiry
 - doplňte příjemce do `$_CONFIG['email']` a odesílací e-mailovou adresu do `$_CONFIG['from']`
+
+### Frontend
+
+- bootstrap (light/dark theme)
+
+### Backend
+
+- php (curl, json)

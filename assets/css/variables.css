@@ -1,0 +1,6 @@
+a:hover {
+	text-decoration: none !important;
+}
+a {
+	text-underline-offset: 0.2em;
+}
