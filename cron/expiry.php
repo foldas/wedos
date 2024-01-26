@@ -21,6 +21,15 @@ if ($_CONFIG && !empty($_CONFIG['email']) && !empty($_CONFIG['from']) && filter_
 	$res=curl_exec($ch);
 	$data=json_decode($res,true);
 	$pole_domen=[];
+	if ($_CONFIG['external']) {
+		foreach($_CONFIG['external'] as $item) {
+			$pole_domen[]=[
+				'status'=>'local',
+				'name'=>$item['name'],
+				'expiration'=>$item['expiration']
+			];
+		}
+	}
 	foreach($data['response'] as $klic => $hodnota) {
 		if (is_array($hodnota)) {
 			foreach($hodnota as $klic2 => $hodnota2) {
