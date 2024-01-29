@@ -12,10 +12,13 @@
 
 ### Další funkce
 
-- zobrazení dalších domén s daty expirace
+- zablokování prodloužení pro vybrané domény
+- zobrazení dalších domén mimo wedos s daty expirace
+- napojení na fakturoid (kontrola zaplacení faktur)
 
 ### Použití
 
+- povolte zápis do adresáře files
 - přejmenujte config.sample.php na config.php a vyplňte údaje (přihlašovací údaje k aplikaci + k API)
 - proměnná `$_CONFIG['pass']` musí být hashována přes password_hash funkci
 - pokud není `$_CONFIG['name']` ani `$_CONFIG['pass']` vyplněno, přihlášení do aplikace se nepoužije a rovnou se spustí

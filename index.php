@@ -213,6 +213,7 @@ if (!empty($input)) {
 			}
 		break;
 		case "domains":
+			// external domains
 			$pole_domen=[];
 			if ($_CONFIG['external']) {
 				foreach($_CONFIG['external'] as $item) {
@@ -224,6 +225,51 @@ if (!empty($input)) {
 					];
 				}
 			}
+			// fakturoid
+			if ($_CONFIG['fakturoid']['invoices']) {
+				$file_fakturoid=__DIR__."/files/fakturoid.json";
+				if (file_exists($file_fakturoid)) {
+					$changed=filemtime($file_fakturoid)+21600;
+					if ($changed>time()) {
+						$request_fakturoid=0;
+					} else {
+						$request_fakturoid=1;
+					}
+				} else {
+					$request_fakturoid=1;
+				}
+				if ($request_fakturoid==1) {
+					$invoices=[];
+					foreach ($_CONFIG['fakturoid']['invoices'] as $invoice_key => $invoice_value) {
+						if (empty($invoices[$invoice_value])) {
+							$ch=curl_init();
+							curl_setopt($ch,CURLOPT_URL,"https://app.fakturoid.cz/api/v2/accounts/{$_CONFIG['fakturoid']['account']}/invoices/{$invoice_value}.json");
+							curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+							curl_setopt($ch,CURLOPT_HEADER,false);
+							curl_setopt($ch,CURLOPT_HTTPHEADER,[
+								"Content-Type: application/json",
+								"Authorization: Basic ".base64_encode($_CONFIG['fakturoid']['email'].":".$_CONFIG['fakturoid']['api']),
+								"User-Agent: {$_CONFIG['fakturoid']['app']} ({$_CONFIG['fakturoid']['email']})"
+							]);
+							$response=curl_exec($ch);
+							curl_close($ch);
+							$response_arr=json_decode($response,true);
+							$invoices[$invoice_value]=$response_arr['status'];
+							$fp=fopen($file_fakturoid, "w");
+							fwrite($fp,json_encode($invoices));
+							fclose($fp);
+						}
+					}
+				} else {
+					$handle=fopen($file_fakturoid,"r");
+					$invoices=fread($handle,filesize($file_fakturoid));
+					fclose($handle);
+					$invoices=json_decode($invoices,true);
+				}
+			} else {
+				$invoices=[];
+			}
+			// wedos response
 			foreach($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					foreach($hodnota as $klic2 => $hodnota2) {
@@ -237,6 +283,7 @@ if (!empty($input)) {
 					}
 				}
 			}
+			// list of domains
 			echo "<table class=\"table\">";
 			echo "<thead><tr><th class=\"text-center\">#</th><th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
@@ -261,7 +308,16 @@ if (!empty($input)) {
 						} else {
 							echo "<span class=\"badge text-bg-success\">{$no}</span>";
 						}
-						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a></td><td>";
+						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a>";
+						if (!empty($_CONFIG['fakturoid']['invoices'][$hodnota['name']]) && !empty($invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]])) {
+							if ($invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]=="paid") {
+								echo "<span class=\"badge text-bg-success ms-2\">{$invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]}</span>";
+							} else {
+								echo "<span class=\"badge text-bg-danger ms-2\">{$invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]}</span>";
+							}
+						}
+
+						echo "</td><td>";
 						if ($hodnota['status']=="local") echo "<span class=\"badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle\">{$hodnota['status']}</span>"; else echo $hodnota['status'];
 						echo "</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
 						if ($hodnota['status']=="local") {
