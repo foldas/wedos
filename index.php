@@ -7,6 +7,8 @@ if (empty($_SESSION['login'])) {
 	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
 		if ($_POST['jmeno']==$_CONFIG['name'] && password_verify($_POST['heslo'],$_CONFIG['pass'])) {
 			$_SESSION['login']=1;
+			header("location: /domains/");
+			exit();
 		}
 	}
 } elseif (!empty($_GET['logout']) && !empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
@@ -25,75 +27,92 @@ if (empty($_SESSION['login'])) {
 	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
-<main class="container">
-<div class="d-flex">
-	<ul class="navbar-nav ms-auto mt-3 me-1">
-		<li class="nav-item dropdown">
-			<button class="btn btn-link nav-link py-1 px-2 dropdown-toggle d-flex align-items-center border" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown">
-				<svg class="bi my-1 theme-icon-active"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
+<div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
+	<button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Přepnout motiv (auto)">
+		<svg class="bi my-1 theme-icon-active" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
+		<span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
+	</button>
+	<ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme-text">
+		<li>
+			<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+				<svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#sun-fill"></use></svg>
+				Světlý
+				<svg class="bi ms-auto d-none" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
 			</button>
-			<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme" style="--bs-dropdown-min-width: 8rem;">
-				<li>
-					<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
-						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#sun-fill"></use></svg>
-						Světlý
-						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
-					</button>
-				</li>
-				<li>
-					<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
-						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#moon-stars-fill"></use></svg>
-						Tmavý
-						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
-					</button>
-				</li>
-				<li>
-					<button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto">
-						<svg class="bi me-2 opacity-50 theme-icon"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
-						Auto
-						<svg class="bi ms-auto d-none"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
-					</button>
-				</li>
-			</ul>
+		</li>
+		<li>
+			<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+				<svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#moon-stars-fill"></use></svg>
+				Tmavý
+				<svg class="bi ms-auto d-none" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
+			</button>
+		</li>
+		<li>
+			<button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
+				<svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#circle-half"></use></svg>
+				Auto
+				<svg class="bi ms-auto d-none" width="1em" height="1em"><use href="/assets/icons/bootstrap-icons.svg#check2"></use></svg>
+			</button>
 		</li>
 	</ul>
 </div>
 <?php
 if (empty($_SESSION['login'])) {
 ?>
-<form action="/" method="post">
-	<div class="position-absolute top-50 start-50 translate-middle">
-		<div class="d-flex flex-wrap">
-			<div class="my-1 w-100"><input type="text" id="jmeno" name="jmeno" placeholder="Jméno" class="form-control" required /></div>
-			<div class="my-1 w-100"><input type="password" id="heslo" name="heslo" placeholder="Heslo" class="form-control" required /></div>
-			<div class="my-1 w-100 text-center"><button class="btn btn-primary">Přihlásit se</button></div>
+<main class="container">
+	<form action="/" method="post">
+		<div class="position-absolute top-50 start-50 translate-middle">
+			<div class="d-flex flex-wrap">
+				<div class="my-1 w-100"><input type="text" id="jmeno" name="jmeno" placeholder="Jméno" class="form-control" required /></div>
+				<div class="my-1 w-100"><input type="password" id="heslo" name="heslo" placeholder="Heslo" class="form-control" required /></div>
+				<div class="my-1 w-100 text-center"><button class="btn btn-primary">Přihlásit se</button></div>
+			</div>
 		</div>
-	</div>
-</form>
+	</form>
+</main>
 <?php
 } else {
+	if (!empty($_GET['go'])) $go=$_GET['go']; else $go="";
 ?>
-<div class="row mt-2 mt-md-4">
-	<div class="col-md-3 col-lg-2 mb-2 pe-lg-4">
-		<div class="d-flex flex-wrap flex-md-column">
-			<div class="p-1 px-md-0 flex-fill"><a href="/domains/" class="btn btn-primary w-100 text-md-start">Domény</a></div>
-			<div class="p-1 px-md-0 flex-fill"><a href="/credit/" class="btn btn-primary w-100 text-md-start">Kredit</a></div>
-			<div class="p-1 px-md-0 flex-fill"><a href="/movement/" class="btn btn-primary w-100 text-md-start">Pohyby</a></div>
-			<div class="p-1 px-md-0 flex-fill"><a href="/ping/" class="btn btn-primary w-100 text-md-start">Ping</a></div>
+<nav class="navbar navbar-expand-md fixed-top bd-navbar">
+	<div class="container">
+		<a href="/" class="nav-link ps-1"><svg class="bi" width="1em" height="1em" style="font-size: 1.9rem;"><use href="/assets/icons/bootstrap-icons.svg#github"></use></svg></a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Zobrazit navigaci">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse justify-content-center" id="navbarCollapse">
+			<ul class="navbar-nav mb-2 mb-md-0 nav nav-underline">
+				<li class="nav-item">
+					<a href="/domains/" class="nav-link<?php if ($go=="domains") echo " active"; ?>">Domény</a>
+				</li>
+				<li class="nav-item">
+					<a href="/credit/" class="nav-link<?php if ($go=="credit") echo " active"; ?>">Kredit</a>
+				</li>
+				<li class="nav-item">
+					<a href="/movement/" class="nav-link<?php if ($go=="movement") echo " active"; ?>">Pohyby</a>
+				</li>
+				<li class="nav-item">
+					<a href="/ping/" class="nav-link<?php if ($go=="ping") echo " active"; ?>">Ping</a>
+				</li>
 <?php
 if (!empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
 ?>
-			<div class="p-1 px-md-0 flex-fill"><a href="/?logout=yes" class="btn btn-secondary w-100 text-md-start">Odhlásit</a></div>
+				<li class="nav-item">
+					<a href="/?logout=yes" class="nav-link">Odhlásit</a>
+				</li>
 <?php
 }
 ?>
+			</ul>
 		</div>
 	</div>
-	<div class="col-md-9 col-lg-10">
+</nav>
+
+<main class="container mt-5">
+	<div class="pt-4 pt-md-5">
 <?php
 $time=time();
 $auth=sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H',$time));
-if (!empty($_GET['go'])) $go=$_GET['go']; else $go="";
 switch ($go) {
 	default:
 		$input=[];
@@ -284,7 +303,7 @@ if (!empty($input)) {
 				}
 			}
 			// list of domains
-			echo "<table class=\"table\">";
+			echo "<table class=\"table mb-5\">";
 			echo "<thead><tr><th class=\"text-center\">#</th><th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
 			if ($pole_domen) {
@@ -358,15 +377,14 @@ if (!empty($input)) {
 	}
 	echo "<br/>\n";
 } else {
-	echo "<div class=\"m-2 text-center text-md-start\"><a href=\"https://github.com/foldas/wedos\" target=\"_blank\">https://github.com/foldas/wedos</a></div>";
+	echo "<div class=\"my-3 my-md-2 text-center\"><a href=\"https://github.com/foldas/wedos\" target=\"_blank\">https://github.com/foldas/wedos</a></div>";
 }
 ?>
 	</div>
-</div>
+</main>
 <?php
 }
 ?>
-</main>
 <script src="/assets/js/bootstrap.bundle.min.js"></script>
 <script src="/assets/js/switch.min.js"></script>
 </body>
