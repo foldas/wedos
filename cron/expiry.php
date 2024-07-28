@@ -67,4 +67,3 @@ if ($_CONFIG && !empty($_CONFIG['email']) && !empty($_CONFIG['from']) && filter_
 		}
 	}
 }
-?>
