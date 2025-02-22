@@ -1,12 +1,15 @@
 <?php
 session_start();
-require_once __DIR__.'/config.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+use Fakturoid\FakturoidManager;
+use Symfony\Component\HttpClient\Psr18Client;
 if (empty($_SESSION['login'])) {
 	if (empty($_CONFIG['name']) || empty($_CONFIG['pass'])) {
-		$_SESSION['login']=1;
+		$_SESSION['login'] = 1;
 	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
-		if ($_POST['jmeno']==$_CONFIG['name'] && password_verify($_POST['heslo'],$_CONFIG['pass'])) {
-			$_SESSION['login']=1;
+		if ($_POST['jmeno'] == $_CONFIG['name'] && password_verify($_POST['heslo'], $_CONFIG['pass'])) {
+			$_SESSION['login'] = 1;
 			header("location: /domains/");
 			exit();
 		}
@@ -18,6 +21,7 @@ if (empty($_SESSION['login'])) {
 <!DOCTYPE html>
 <html lang="cs">
 <head>
+	<script src="/assets/js/switch.min.js"></script>
 	<meta charset="utf-8" />
 	<meta name="robots" content="noindex, nofollow" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -72,7 +76,7 @@ if (empty($_SESSION['login'])) {
 </main>
 <?php
 } else {
-	if (!empty($_GET['go'])) $go=$_GET['go']; else $go="";
+	$go = $_GET['go'] ?? '';
 ?>
 <nav class="navbar navbar-expand-md fixed-top bd-navbar">
 	<div class="container">
@@ -83,16 +87,16 @@ if (empty($_SESSION['login'])) {
 		<div class="collapse navbar-collapse justify-content-center" id="navbarCollapse">
 			<ul class="navbar-nav mb-2 mb-md-0 nav nav-underline">
 				<li class="nav-item">
-					<a href="/domains/" class="nav-link<?php if ($go=="domains") echo " active"; ?>">Domény</a>
+					<a href="/domains/" class="nav-link<?php if ($go == "domains") echo " active"; ?>">Domény</a>
 				</li>
 				<li class="nav-item">
-					<a href="/credit/" class="nav-link<?php if ($go=="credit") echo " active"; ?>">Kredit</a>
+					<a href="/credit/" class="nav-link<?php if ($go == "credit") echo " active"; ?>">Kredit</a>
 				</li>
 				<li class="nav-item">
-					<a href="/movement/" class="nav-link<?php if ($go=="movement") echo " active"; ?>">Pohyby</a>
+					<a href="/movement/" class="nav-link<?php if ($go == "movement") echo " active"; ?>">Pohyby</a>
 				</li>
 				<li class="nav-item">
-					<a href="/ping/" class="nav-link<?php if ($go=="ping") echo " active"; ?>">Ping</a>
+					<a href="/ping/" class="nav-link<?php if ($go == "ping") echo " active"; ?>">Ping</a>
 				</li>
 <?php
 if (!empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
@@ -111,66 +115,66 @@ if (!empty($_CONFIG['name']) && !empty($_CONFIG['pass'])) {
 <main class="container mt-5">
 	<div class="pt-4 pt-md-5">
 <?php
-$time=time();
-$auth=sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H',$time));
+$time = time();
+$auth = sha1($_CONFIG['apiname'].sha1($_CONFIG['apipass']).date('H',$time));
 switch ($go) {
 	default:
-		$input=[];
+		$input = [];
 	break;
 	case "ping":
-		$input=[
-			'request'=>[
-				'user'=>$_CONFIG['apiname'],
-				'auth'=>$auth,
-				'command'=>'ping',
-				'clTRID'=>$go.' - '.$time
+		$input = [
+			'request' => [
+				'user' => $_CONFIG['apiname'],
+				'auth' => $auth,
+				'command' => 'ping',
+				'clTRID' => $go.' - '.$time
 			]
 		];
 	break;
 	case "credit":
-		$input=[
-			'request'=>[
-				'user'=>$_CONFIG['apiname'],
-				'auth'=>$auth,
-				'command'=>'credit-info',
-				'clTRID'=>$go.' - '.$time
+		$input = [
+			'request' => [
+				'user' => $_CONFIG['apiname'],
+				'auth' => $auth,
+				'command' => 'credit-info',
+				'clTRID' => $go.' - '.$time
 			]
 		];
 	break;
 	case "movement":
-		$input=[
-			'request'=>[
-				'user'=>$_CONFIG['apiname'],
-				'auth'=>$auth,
-				'command'=>'account-list',
-				'clTRID'=>$go.' - '.$time,
-				'data'=>[
-					'date_from'=>date("Y-m-d",strtotime("-3 month")),
-					'date_to'=>date("Y-m-d")
+		$input = [
+			'request' => [
+				'user' => $_CONFIG['apiname'],
+				'auth' => $auth,
+				'command' => 'account-list',
+				'clTRID' => $go.' - '.$time,
+				'data' => [
+					'date_from' => date("Y-m-d",strtotime("-3 month")),
+					'date_to' => date("Y-m-d")
 				]
 			]
 		];
 	break;
 	case "domains":
-		$input=[
-			'request'=>[
-				'user'=>$_CONFIG['apiname'],
-				'auth'=>$auth,
-				'command'=>'domains-list',
-				'clTRID'=>$go.' - '.$time
+		$input = [
+			'request' => [
+				'user' => $_CONFIG['apiname'],
+				'auth' => $auth,
+				'command' => 'domains-list',
+				'clTRID' => $go.' - '.$time
 			]
 		];
 	break;
 	case "renew":
-		$input=[
-			'request'=>[
-				'user'=>$_CONFIG['apiname'],
-				'auth'=>$auth,
-				'command'=>'domain-renew',
-				'clTRID'=>$go.' - '.$time,
-				'data'=>[
-					'name'=>$_GET['name'],
-					'period'=>1
+		$input = [
+			'request' => [
+				'user' => $_CONFIG['apiname'],
+				'auth' => $auth,
+				'command' => 'domain-renew',
+				'clTRID' => $go.' - '.$time,
+				'data' => [
+					'name' => $_GET['name'],
+					'period' => 1
 				]
 			]
 		];
@@ -188,37 +192,37 @@ if (!empty($input)) {
 	$data=json_decode($res,true);
 	switch ($go) {
 		case "ping":
-			foreach($data['response'] as $klic => $hodnota) {
+			foreach ($data['response'] as $klic => $hodnota) {
 				echo "{$klic}: {$hodnota}<br/>";
 			}
 		break;
 		case "credit":
 			$pole=[];
-			foreach($data['response'] as $klic => $hodnota) {
+			foreach ($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					$pole=$hodnota;
 				}
 			}
-			foreach($pole as $klic => $hodnota) {
+			foreach ($pole as $klic => $hodnota) {
 				echo "{$klic}: {$hodnota}<br/>";
 			}
 		break;
 		case "movement":
-			foreach($data['response'] as $klic => $hodnota) {
+			foreach ($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
-					if ($klic=="data") echo "<br/>";
+					if ($klic == "data") echo "<br/>";
 					echo "<b>{$klic}:</b><br/>";
-					$i=0;
-					$pole=[];
-					foreach($hodnota as $klic2 => $hodnota2) {
-						$pole[$i]="";
+					$i = 0;
+					$pole = [];
+					foreach ($hodnota as $klic2 => $hodnota2) {
+						$pole[$i] = "";
 						if (is_array($hodnota2)) {
-							foreach($hodnota2 as $klic3 => $hodnota3) {
-								if ($klic3=="ID") $pole[$i].="<br/>";
-								$pole[$i].="{$klic3}: {$hodnota3}<br/>";
+							foreach ($hodnota2 as $klic3 => $hodnota3) {
+								if ($klic3 == "ID") $pole[$i] .= "<br/>";
+								$pole[$i] .= "{$klic3}: {$hodnota3}<br/>";
 							}
 						} else {
-							$pole[$i].="{$klic2}: {$hodnota2}<br/>";
+							$pole[$i] .= "{$klic2}: {$hodnota2}<br/>";
 						}
 						$i++;
 					}
@@ -233,50 +237,53 @@ if (!empty($input)) {
 		break;
 		case "domains":
 			// external domains
-			$pole_domen=[];
+			$pole_domen = [];
 			if ($_CONFIG['external']) {
-				foreach($_CONFIG['external'] as $item) {
-					$pole_domen[]=[
-						'status'=>'local',
-						'name'=>$item['name'],
-						'expiration'=>$item['expiration'],
-						'note'=>$item['note'],
+				foreach ($_CONFIG['external'] as $item) {
+					$pole_domen[] = [
+						'status' => 'local',
+						'name' => $item['name'],
+						'expiration' => $item['expiration'],
+						'note' => $item['note'],
 					];
 				}
 			}
 			// fakturoid
 			if ($_CONFIG['fakturoid']['invoices']) {
-				$file_fakturoid=__DIR__."/files/fakturoid.json";
+				$file_fakturoid = __DIR__ . "/files/fakturoid.json";
 				if (file_exists($file_fakturoid)) {
-					$changed=filemtime($file_fakturoid)+21600;
-					if ($changed>time()) {
-						$request_fakturoid=0;
+					$changed = filemtime($file_fakturoid) + 21600;
+					if ($changed > time()) {
+						$request_fakturoid = 0;
 					} else {
-						$request_fakturoid=1;
+						$request_fakturoid = 1;
 					}
 				} else {
-					$request_fakturoid=1;
+					$request_fakturoid = 1;
 				}
-				if ($request_fakturoid==1) {
-					$invoices=[];
+				if ($request_fakturoid == 1) {
+			        $httpClient = new Psr18Client();
+			        $fManager = new FakturoidManager(
+			            $httpClient,
+			            $_CONFIG['fakturoid']['id'],
+			            $_CONFIG['fakturoid']['secret'],
+			            $_CONFIG['fakturoid']['app']
+			        );
+			        $fManager->authClientCredentials();
+			        $fManager->setAccountSlug($_CONFIG['fakturoid']['slug']);
+					$invoices = [];
 					foreach ($_CONFIG['fakturoid']['invoices'] as $invoice_key => $invoice_value) {
 						if (empty($invoices[$invoice_value])) {
-							$ch=curl_init();
-							curl_setopt($ch,CURLOPT_URL,"https://app.fakturoid.cz/api/v2/accounts/{$_CONFIG['fakturoid']['account']}/invoices/{$invoice_value}.json");
-							curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-							curl_setopt($ch,CURLOPT_HEADER,false);
-							curl_setopt($ch,CURLOPT_HTTPHEADER,[
-								"Content-Type: application/json",
-								"Authorization: Basic ".base64_encode($_CONFIG['fakturoid']['email'].":".$_CONFIG['fakturoid']['api']),
-								"User-Agent: {$_CONFIG['fakturoid']['app']} ({$_CONFIG['fakturoid']['email']})"
-							]);
-							$response=curl_exec($ch);
-							curl_close($ch);
-							$response_arr=json_decode($response,true);
-							$invoices[$invoice_value]=$response_arr['status'];
-							$fp=fopen($file_fakturoid, "w");
-							fwrite($fp,json_encode($invoices));
-							fclose($fp);
+			                $response = $fManager->getInvoicesProvider()->get($invoice_value);
+			                if (!empty($response)) {
+			                	$invoiceDetail = $response->getBody();
+			                    if ($invoiceDetail) {
+			                        $invoices[$invoice_value] = $invoiceDetail->status;
+									$fp = fopen($file_fakturoid, "w");
+									fwrite($fp, json_encode($invoices));
+									fclose($fp);
+			                    }
+			                }
 						}
 					}
 				} else {
@@ -289,11 +296,11 @@ if (!empty($input)) {
 				$invoices=[];
 			}
 			// wedos response
-			foreach($data['response'] as $klic => $hodnota) {
+			foreach ($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
-					foreach($hodnota as $klic2 => $hodnota2) {
+					foreach ($hodnota as $klic2 => $hodnota2) {
 						if (is_array($hodnota2)) {
-							foreach($hodnota2 as $klic3 => $hodnota3) {
+							foreach ($hodnota2 as $klic3 => $hodnota3) {
 								if (is_array($hodnota3)) {
 									$pole_domen[]=$hodnota3;
 								}
@@ -307,29 +314,29 @@ if (!empty($input)) {
 			echo "<thead><tr><th class=\"text-center\">#</th><th><a href=\"/domains/?sortName=1\" class=\"text-body\">Doména</a></th><th>Stav</th><th class=\"text-center\"><a href=\"/domains/\" class=\"text-body\">Expirace</a></th><th class=\"text-center\">Akce</th></tr></thead>";
 			echo "<tbody class=\"table-group-divider\">";
 			if ($pole_domen) {
-				$today=date("Y-m-d");
-				$fourteen=date("Y-m-d",strtotime("+14 days"));
+				$today = date("Y-m-d");
+				$fourteen = date("Y-m-d", strtotime("+14 days"));
 				$no=1;
 				if (!empty($_GET['sortName'])) {
-					$name=array_column($pole_domen, 'name');
+					$name = array_column($pole_domen, 'name');
 					array_multisort($name, SORT_ASC, $pole_domen);
 				} else {
-					$expiration=array_column($pole_domen, 'expiration');
+					$expiration = array_column($pole_domen, 'expiration');
 					array_multisort($expiration, SORT_ASC, $pole_domen);
 				}
 				foreach ($pole_domen as $klic => $hodnota) {
-					if ($hodnota['status']!="deleted") {
+					if ($hodnota['status'] != "deleted") {
 						echo "<tr><td class=\"text-center\">";
-						if ($hodnota['expiration']<=$today) {
+						if ($hodnota['expiration'] <= $today) {
 							echo "<span class=\"badge text-bg-danger\">{$no}</span>";
-						} elseif ($hodnota['expiration']<=$fourteen) {
+						} elseif ($hodnota['expiration'] <= $fourteen) {
 							echo "<span class=\"badge text-bg-warning\">{$no}</span>";
 						} else {
 							echo "<span class=\"badge text-bg-success\">{$no}</span>";
 						}
 						echo "<td><a href=\"https://{$hodnota['name']}\" class=\"text-body\" target=\"_blank\">{$hodnota['name']}</a>";
 						if (!empty($_CONFIG['fakturoid']['invoices'][$hodnota['name']]) && !empty($invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]])) {
-							if ($invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]=="paid") {
+							if ($invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]] == "paid") {
 								echo "<span class=\"badge text-bg-success ms-2\">{$invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]}</span>";
 							} else {
 								echo "<span class=\"badge text-bg-danger ms-2\">{$invoices[$_CONFIG['fakturoid']['invoices'][$hodnota['name']]]}</span>";
@@ -337,9 +344,13 @@ if (!empty($input)) {
 						}
 
 						echo "</td><td>";
-						if ($hodnota['status']=="local") echo "<span class=\"badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle\">{$hodnota['status']}</span>"; else echo $hodnota['status'];
+						if ($hodnota['status'] == "local") {
+							echo "<span class=\"badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle\">{$hodnota['status']}</span>";
+						} else {
+							echo $hodnota['status'];
+						}
 						echo "</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
-						if ($hodnota['status']=="local") {
+						if ($hodnota['status'] == "local") {
 							echo "<i>{$hodnota['note']}</i>";
 						} else {
 							if (!in_array($hodnota['name'],$_CONFIG['blocked'])) {
@@ -357,12 +368,12 @@ if (!empty($input)) {
 			echo "</table>";
 		break;
 		case "renew":
-			foreach($data['response'] as $klic => $hodnota) {
+			foreach ($data['response'] as $klic => $hodnota) {
 				if (is_array($hodnota)) {
 					echo "<b>{$klic}:</b><br/>";
-					foreach($hodnota as $klic2 => $hodnota2) {
+					foreach ($hodnota as $klic2 => $hodnota2) {
 						if (is_array($hodnota2)) {
-							foreach($hodnota2 as $klic3 => $hodnota3) {
+							foreach ($hodnota2 as $klic3 => $hodnota3) {
 								echo "{$klic3}: {$hodnota3}<br/>";
 							}
 						} else {
@@ -386,6 +397,5 @@ if (!empty($input)) {
 }
 ?>
 <script src="/assets/js/bootstrap.bundle.min.js"></script>
-<script src="/assets/js/switch.min.js"></script>
 </body>
 </html>

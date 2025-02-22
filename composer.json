@@ -1,0 +1,6 @@
+{
+    "require": {
+        "fakturoid/fakturoid-php": "^3.0",
+        "symfony/http-client": "^7.2"
+    }
+}
