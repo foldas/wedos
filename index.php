@@ -4,10 +4,13 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/vendor/autoload.php';
 use Fakturoid\FakturoidManager;
 use Symfony\Component\HttpClient\Psr18Client;
+if (!isset($_SESSION['token'])) {
+	$_SESSION['token'] = bin2hex(random_bytes(16));
+}
 if (empty($_SESSION['login'])) {
 	if (empty($_CONFIG['name']) || empty($_CONFIG['pass'])) {
 		$_SESSION['login'] = 1;
-	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo'])) {
+	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo']) && !empty($_POST['token']) && $_POST['token'] == $_SESSION['token']) {
 		if ($_POST['jmeno'] == $_CONFIG['name'] && password_verify($_POST['heslo'], $_CONFIG['pass'])) {
 			$_SESSION['login'] = 1;
 			header("location: /domains/");
@@ -72,11 +75,12 @@ if (empty($_SESSION['login'])) {
 				<div class="my-1 w-100 text-center"><button class="btn btn-primary">Přihlásit se</button></div>
 			</div>
 		</div>
+		<input type="hidden" name="token" value="<?php echo $_SESSION['token']; ?>" />
 	</form>
 </main>
 <?php
 } else {
-	$go = $_GET['go'] ?? '';
+	$go = $_GET['go'] ?? $_POST['go'] ?? '';
 ?>
 <nav class="navbar navbar-expand-md fixed-top bd-navbar">
 	<div class="container">
@@ -149,7 +153,7 @@ switch ($go) {
 				'command' => 'account-list',
 				'clTRID' => $go.' - '.$time,
 				'data' => [
-					'date_from' => date("Y-m-d",strtotime("-3 month")),
+					'date_from' => date("Y-m-d", strtotime("-3 month")),
 					'date_to' => date("Y-m-d")
 				]
 			]
@@ -166,6 +170,10 @@ switch ($go) {
 		];
 	break;
 	case "renew":
+		if (empty($_POST['name']) || empty($_POST['token']) || $_POST['token'] != $_SESSION['token']) {
+			echo "<div class=\"alert alert-danger text-center\">Neplatný požadavek.</div>";
+			break;
+		}
 		$input = [
 			'request' => [
 				'user' => $_CONFIG['apiname'],
@@ -173,7 +181,7 @@ switch ($go) {
 				'command' => 'domain-renew',
 				'clTRID' => $go.' - '.$time,
 				'data' => [
-					'name' => $_GET['name'],
+					'name' => $_POST['name'],
 					'period' => 1
 				]
 			]
@@ -181,15 +189,15 @@ switch ($go) {
 	break;
 }
 if (!empty($input)) {
-	$json=json_encode($input);
-	$ch=curl_init('https://api.wedos.com/wapi/json');
-	curl_setopt($ch,CURLOPT_TIMEOUT,60);
-	curl_setopt($ch,CURLOPT_POST,true);
-	curl_setopt($ch,CURLOPT_POSTFIELDS,'request='.$json);
-	curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-	curl_setopt($ch,CURLOPT_HTTPHEADER,['Content-Type: application/x-www-form-urlencoded']);
-	$res=curl_exec($ch);
-	$data=json_decode($res,true);
+	$json = json_encode($input);
+	$ch = curl_init('https://api.wedos.com/wapi/json');
+	curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+	curl_setopt($ch, CURLOPT_POST, true);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, 'request='.$json);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+	$res = curl_exec($ch);
+	$data = json_decode($res, true);
 	switch ($go) {
 		case "ping":
 			foreach ($data['response'] as $klic => $hodnota) {
@@ -350,14 +358,15 @@ if (!empty($input)) {
 							echo $hodnota['status'];
 						}
 						echo "</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
-						if ($hodnota['status'] == "local") {
+						if (in_array($hodnota['name'], $_CONFIG['blocked'])) {
+							echo "<span class=\"badge text-bg-primary\">X</span>";
+							if ($hodnota['status'] == "local") {
+								echo "&nbsp;&nbsp;<i>{$hodnota['note']}</i>";
+							}
+						} elseif ($hodnota['status'] == "local") {
 							echo "<i>{$hodnota['note']}</i>";
 						} else {
-							if (!in_array($hodnota['name'],$_CONFIG['blocked'])) {
-								echo "<a href=\"/renew/?name={$hodnota['name']}\" onclick=\"return(confirm('Opravdu prodloužit o 1 rok?'));\">Prodloužit</a>";
-							} else {
-								echo "<span class=\"badge text-bg-primary\">X</span>";
-							}
+							echo "<a href=\"#\" class=\"post-link\" data-url=\"/renew/?name={$hodnota['name']}&token={$_SESSION['token']}\" data-confirm=\"Opravdu prodloužit o 1 rok?\">Prodloužit</a>";
 						}
 						echo "</td></tr>";
 						$no++;
@@ -396,6 +405,36 @@ if (!empty($input)) {
 <?php
 }
 ?>
+<form id="postForm" method="post" style="display:none;"></form>
 <script src="/assets/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('a.post-link');
+    if (!link) return;
+    e.preventDefault();
+    const confirmMessage = link.dataset.confirm;
+    if (confirmMessage) {
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+    }
+    const url = link.dataset.url;
+    const form = document.getElementById('postForm');
+    form.innerHTML = '';
+    const parts = url.split('?');
+    form.action = parts[0];
+    if (parts[1]) {
+        const params = new URLSearchParams(parts[1]);
+        params.forEach((value, key) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        });
+    }
+    form.submit();
+});
+</script>
 </body>
 </html>

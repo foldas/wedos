@@ -1,4 +1,13 @@
+# Environment files
 config.php
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Dependencies
 /vendor
+
+# Files
 /files/*
 !/files/.htaccess
