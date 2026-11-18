@@ -7,11 +7,17 @@ use Symfony\Component\HttpClient\Psr18Client;
 if (!isset($_SESSION['token'])) {
 	$_SESSION['token'] = bin2hex(random_bytes(16));
 }
+// domain names are case-insensitive (RFC 4343); ignore whitespace and trailing dot
+function normalize_domain(string $name): string {
+	return strtolower(rtrim(trim($name), '.'));
+}
+$blocked = array_map('normalize_domain', array_filter($_CONFIG['blocked'] ?? [], 'is_string'));
 if (empty($_SESSION['login'])) {
 	if (empty($_CONFIG['name']) || empty($_CONFIG['pass'])) {
 		$_SESSION['login'] = 1;
-	} elseif (!empty($_POST['jmeno']) && !empty($_POST['heslo']) && !empty($_POST['token']) && $_POST['token'] == $_SESSION['token']) {
+	} elseif (is_string($_POST['jmeno'] ?? null) && is_string($_POST['heslo'] ?? null) && $_POST['jmeno'] !== '' && $_POST['heslo'] !== '' && is_string($_POST['token'] ?? null) && hash_equals($_SESSION['token'], $_POST['token'])) {
 		if ($_POST['jmeno'] == $_CONFIG['name'] && password_verify($_POST['heslo'], $_CONFIG['pass'])) {
+			session_regenerate_id(true);
 			$_SESSION['login'] = 1;
 			header("location: /domains/");
 			exit();
@@ -80,7 +86,7 @@ if (empty($_SESSION['login'])) {
 </main>
 <?php
 } else {
-	$go = $_GET['go'] ?? $_POST['go'] ?? '';
+	$go = $_GET['go'] ?? '';
 ?>
 <nav class="navbar navbar-expand-md fixed-top bd-navbar">
 	<div class="container">
@@ -170,8 +176,17 @@ switch ($go) {
 		];
 	break;
 	case "renew":
-		if (empty($_POST['name']) || empty($_POST['token']) || $_POST['token'] != $_SESSION['token']) {
+		if (!is_string($_POST['name'] ?? null) || $_POST['name'] === '' || !is_string($_POST['token'] ?? null) || !hash_equals($_SESSION['token'], $_POST['token'])) {
 			echo "<div class=\"alert alert-danger text-center\">Neplatný požadavek.</div>";
+			break;
+		}
+		$renew_name = normalize_domain($_POST['name']);
+		if ($renew_name === '') {
+			echo "<div class=\"alert alert-danger text-center\">Neplatný požadavek.</div>";
+			break;
+		}
+		if (in_array($renew_name, $blocked, true)) {
+			echo "<div class=\"alert alert-danger text-center\">Prodloužení této domény je zablokováno.</div>";
 			break;
 		}
 		$input = [
@@ -181,7 +196,7 @@ switch ($go) {
 				'command' => 'domain-renew',
 				'clTRID' => $go.' - '.$time,
 				'data' => [
-					'name' => $_POST['name'],
+					'name' => $renew_name,
 					'period' => 1
 				]
 			]
@@ -358,7 +373,7 @@ if (!empty($input)) {
 							echo $hodnota['status'];
 						}
 						echo "</td><td class=\"text-center\">".date("d.m.Y",strtotime($hodnota['expiration']))."</td><td class=\"text-center\">";
-						if (in_array($hodnota['name'], $_CONFIG['blocked'])) {
+						if (in_array(normalize_domain((string)$hodnota['name']), $blocked, true)) {
 							echo "<span class=\"badge text-bg-primary\">X</span>";
 							if ($hodnota['status'] == "local") {
 								echo "&nbsp;&nbsp;<i>{$hodnota['note']}</i>";
